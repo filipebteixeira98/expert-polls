@@ -1,0 +1,5 @@
+# node environment
+node_modules/
+
+# vs code editor
+.history/
