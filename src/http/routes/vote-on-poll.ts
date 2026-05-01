@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { FastifyInstance } from 'fastify'
+
+import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
 import { prisma } from '../../lib/prisma'
@@ -20,6 +21,37 @@ export async function voteOnPoll(app: FastifyInstance) {
     const { pollId } = voteOnPollParams.parse(request.params)
 
     const { pollOptionId } = voteOnPollBody.parse(request.body)
+
+    const doesPollExist = await prisma.poll.findUnique({
+      where: {
+        id: pollId,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (!doesPollExist) {
+      return reply.status(400).send({
+        message: 'Poll not found!',
+      })
+    }
+
+    const doesPollOptionExist = await prisma.pollOption.findFirst({
+      where: {
+        id: pollOptionId,
+        pollId,
+      },
+      select: {
+        id: true,
+      },
+    })
+
+    if (!doesPollOptionExist) {
+      return reply.status(400).send({
+        message: 'Poll option not found for this poll!',
+      })
+    }
 
     let { sessionId } = request.cookies
 
